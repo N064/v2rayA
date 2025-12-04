@@ -54,6 +54,7 @@ type V2Ray struct {
 	QuicSecurity  string `json:"quicSecurity"`
 	V             string `json:"v"`
 	Protocol      string `json:"protocol"`
+	Mode          string `json:"mode,omitempty"`
 }
 
 func NewV2Ray(link string) (ServerObj, error) {
@@ -90,6 +91,7 @@ func ParseVlessURL(vless string) (data *V2Ray, err error) {
 		Alpn:          u.Query().Get("alpn"),
 		AllowInsecure: u.Query().Get("allowInsecure") == "true",
 		Key:           u.Query().Get("key"),
+		Mode:          u.Query().Get("mode"),
 		V:             vless,
 		Protocol:      "vless",
 	}
@@ -371,7 +373,9 @@ func (v *V2Ray) Configuration(info PriorInfo) (c Configuration, err error) {
 			}
 		case "xhttp":
 			core.StreamSettings.XHTTPSettings = &coreObj.XHTTPSettings{
+				Host: v.Host,
 				Path: v.Path,
+				Mode: v.Mode,
 			}
 		default:
 			return Configuration{}, fmt.Errorf("unexpected transport type: %v", v.Net)
@@ -467,7 +471,9 @@ func (v *V2Ray) ExportToURL() string {
 			setValue(&query, "key", v.Key)
 			setValue(&query, "quicSecurity", v.QuicSecurity)
 		case "xhttp":
+			setValue(&query, "host", v.Host)
 			setValue(&query, "path", v.Path)
+			setValue(&query, "mode", v.Mode)
 		}
 		if v.TLS != "none" {
 			setValue(&query, "flow", v.Flow)

@@ -148,9 +148,23 @@
               </option>
             </b-select>
           </b-field>
+          <b-field v-show="v2ray.net === 'xhttp'" label="Host" label-position="on-border">
+            <b-input v-model="v2ray.host" placeholder="(optional)" expanded />
+          </b-field>
+          <b-field v-show="v2ray.net === 'xhttp'" label="Path" label-position="on-border">
+            <b-input v-model="v2ray.path" placeholder="/" expanded />
+          </b-field>
+          <b-field v-show="v2ray.net === 'xhttp'" label="Mode" label-position="on-border">
+            <b-select ref="v2ray_mode" v-model="v2ray.mode" expanded>
+              <option value="auto">auto</option>
+              <option value="packet-up">packet-up</option>
+              <option value="stream-up">stream-up</option>
+              <option value="stream-one">stream-one</option>
+            </b-select>
+          </b-field>
           <b-field v-show="v2ray.net === 'ws' ||
             v2ray.net === 'h2' ||
-            v2ray.tls === 'tls' ||
+            (v2ray.tls === 'tls' && v2ray.net !== 'xhttp' ) ||
             (v2ray.net === 'tcp' && v2ray.type === 'http')
             " label="Host" label-position="on-border">
             <b-input v-model="v2ray.host" :placeholder="$t('configureServer.hostObfuscation')" expanded />
@@ -172,9 +186,6 @@
           </b-field>
           <b-field v-show="v2ray.net === 'quic'" label="Key" label-position="on-border">
             <b-input ref="v2ray_key" v-model="v2ray.key" :placeholder="$t('configureServer.password')" expanded />
-          </b-field>
-          <b-field v-show="v2ray.net === 'xhttp'" label="path" label-position="on-border">
-            <b-input v-model="v2ray.path" placeholder="XHTTP Path" expanded />
           </b-field>
         </b-tab-item>
         <b-tab-item label="SS">
@@ -618,7 +629,7 @@ export default {
       net: "tcp",
       type: "none",
       host: "",
-      path: "",
+      path: "/",
       tls: "none",
       quicSecurity: "none",
       fp: "",
@@ -631,6 +642,7 @@ export default {
       allowInsecure: false,
       protocol: "vmess",
       key: "none",
+      mode: "auto",
     },
     ss: {
       method: "2022-blake3-aes-128-gcm",
@@ -834,6 +846,7 @@ export default {
           spx: u.params.spx || "",
           allowInsecure: u.params.allowInsecure || false,
           key: u.params.key,
+          mode: u.params.mode || "auto",
           protocol: "vless",
         };
         if (o.alpn !== "") {
@@ -1072,6 +1085,9 @@ export default {
             query.key = srcObj.key;
             query.quicSecurity = srcObj.quicSecurity;
           }
+          if (srcObj.net === "xhttp") {
+            query.mode = srcObj.mode;
+          }
           if (query.security == "reality") {
             query.pbk = srcObj.pbk;
             query.sid = srcObj.sid;
@@ -1289,6 +1305,9 @@ export default {
         this.$nextTick(() => {
           this.v2ray.tls = "tls";
         });
+      }
+      if (this.v2ray.protocol === "vless" && this.v2ray.net === "xhttp") {
+        this.v2ray.mode = "auto";
       }
     },
     async handleClickSubmit() {

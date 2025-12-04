@@ -156,7 +156,9 @@ type StreamSettings struct {
 	Sockopt         *Sockopt         `json:"sockopt,omitempty"`
 }
 type XHTTPSettings struct {
+	Host string `json:"host,omitempty"`
 	Path string `json:"path,omitempty"`
+	Mode string `json:"mode,omitempty"`
 }
 type RealitySettings struct {
 	ServerName  string `json:"serverName,omitempty"`
